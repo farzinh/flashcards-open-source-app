@@ -1,0 +1,8 @@
+FROM postgres:18.7
+
+COPY scripts/deploy/migrate.sh /scripts/deploy/migrate.sh
+COPY db/migrations/ /db/migrations/
+COPY db/views/ /db/views/
+
+RUN sed -i 's/\r$//' /scripts/deploy/migrate.sh
+ENTRYPOINT ["bash", "/scripts/deploy/migrate.sh"]

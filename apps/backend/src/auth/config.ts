@@ -1,6 +1,4 @@
-export type AuthConfig =
-  | Readonly<{ mode: "cognito" }>
-  | Readonly<{ mode: "none" }>;
+export type AuthConfig = Readonly<{ mode: "cognito" | "guest" | "none" }>;
 
 let resolvedAuthConfig: AuthConfig | undefined;
 
@@ -34,11 +32,11 @@ export function getAuthConfig(): AuthConfig {
 
   const authMode = process.env.AUTH_MODE;
   if (authMode === undefined || authMode === "") {
-    throw new Error('AUTH_MODE is required and must be set to "cognito" or "none"');
+    throw new Error('AUTH_MODE is required and must be set to "cognito", "guest", or "none"');
   }
 
-  if (authMode === "cognito") {
-    resolvedAuthConfig = { mode: "cognito" };
+  if (authMode === "cognito" || authMode === "guest") {
+    resolvedAuthConfig = { mode: authMode };
     return resolvedAuthConfig;
   }
 
@@ -57,7 +55,7 @@ export function getAuthConfig(): AuthConfig {
     return resolvedAuthConfig;
   }
 
-  throw new Error(`AUTH_MODE must be set to "cognito" or "none", got "${authMode}"`);
+  throw new Error(`AUTH_MODE must be set to "cognito", "guest", or "none", got "${authMode}"`);
 }
 
 export function resetAuthConfigForTests(): void {

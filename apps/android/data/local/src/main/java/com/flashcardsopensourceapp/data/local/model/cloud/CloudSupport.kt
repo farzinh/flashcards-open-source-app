@@ -20,6 +20,7 @@ private val officialCloudApiBaseUrls: Set<String> = setOf(
     flashcardsOfficialApiBaseUrl,
     "https://api.flashcards-open-source-app.com/v1"
 )
+private val officialCloudApiUris: Set<URI> = officialCloudApiBaseUrls.map(::URI).toSet()
 private const val customCloudApiHostPrefix: String = "api."
 private const val customCloudAuthHostPrefix: String = "auth."
 private val canonicalIsoTimestampFormatter: DateTimeFormatter = DateTimeFormatter
@@ -78,6 +79,20 @@ fun makeCustomCloudServiceConfiguration(customOrigin: String): CloudServiceConfi
         apiBaseUrl = "https://api.$host$portSuffix/v1",
         authBaseUrl = "https://auth.$host$portSuffix"
     )
+}
+
+/** Compare destinations before a destructive server switch, including HTTPS's default port. */
+fun CloudServiceConfiguration.targetsSameServer(other: CloudServiceConfiguration): Boolean {
+    val current = URI(apiBaseUrl).withoutDefaultHttpsPort()
+    val target = URI(other.apiBaseUrl).withoutDefaultHttpsPort()
+    return current == target || (current in officialCloudApiUris && target in officialCloudApiUris)
+}
+
+private fun URI.withoutDefaultHttpsPort(): URI {
+    if (!scheme.equals("https", ignoreCase = true) || port != 443) {
+        return this
+    }
+    return URI(scheme, userInfo, host, -1, path, query, fragment)
 }
 
 fun normalizeCustomCloudOrigin(customOrigin: String): String {

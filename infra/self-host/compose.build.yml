@@ -1,0 +1,8 @@
+services:
+  migrate:
+    build:
+      context: ../..
+      dockerfile: infra/self-host/Dockerfile.migrate
+  backend:
+    build:
+      context: ../../apps/backend

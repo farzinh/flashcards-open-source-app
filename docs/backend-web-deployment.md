@@ -33,6 +33,8 @@ The local web smoke validates the current branch without relying on production a
 
 ## Non-CDK/self-hosted backend runtime
 
+For a private, AWS-free mobile deployment, see [Self-host with Docker and Portainer](self-hosting.md).
+
 Set `PUBLIC_APP_BASE_URL` to the public origin of the web app ([rules](../.env.example)); CDK deployments inject `https://app.<baseDomain>`.
 
 ### Client compatibility

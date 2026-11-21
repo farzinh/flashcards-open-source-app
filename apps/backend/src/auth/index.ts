@@ -348,6 +348,15 @@ async function authenticateRequestWithDependencies(
   }
 
   const parsedAuthorization = parseAuthorizationHeader(request.authorizationHeader);
+  const sessionToken = request.sessionToken;
+  if (authConfig.mode === "guest" && (
+    parsedAuthorization.scheme === "bearer"
+    || parsedAuthorization.scheme === "api_key"
+    || (sessionToken !== undefined && sessionToken !== "")
+  )) {
+    throw new AuthError(401, "This server accepts only guest sessions.");
+  }
+
   if (parsedAuthorization.scheme === "api_key") {
     const auth = await runOperation(
       () => dependencies.authenticateAgentApiKeyFn(parsedAuthorization.token),
@@ -393,7 +402,6 @@ async function authenticateRequestWithDependencies(
     };
   }
 
-  const sessionToken = request.sessionToken;
   if (sessionToken !== undefined && sessionToken !== "") {
     const identity = await runOperation(
       () => dependencies.verifyIdTokenFn(sessionToken),

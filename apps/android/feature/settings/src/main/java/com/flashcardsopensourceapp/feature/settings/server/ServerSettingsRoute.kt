@@ -6,12 +6,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -21,6 +27,11 @@ import com.flashcardsopensourceapp.feature.settings.R
 import com.flashcardsopensourceapp.feature.settings.SettingsScreenScaffold
 import com.flashcardsopensourceapp.feature.settings.settingsScreenCardSpacing
 import com.flashcardsopensourceapp.feature.settings.settingsScreenContentPadding
+
+private enum class ServerSwitch(val buttonLabel: Int) {
+    Custom(R.string.settings_server_apply_button),
+    Official(R.string.settings_server_reset_button)
+}
 
 const val serverSettingsScreenTag: String = "server_settings_screen"
 
@@ -33,6 +44,28 @@ fun ServerSettingsRoute(
     onResetToOfficialServer: () -> Unit,
     onBack: () -> Unit
 ) {
+    var pendingAction by remember(uiState.apiBaseUrl, uiState.previewApiBaseUrl) {
+        mutableStateOf<ServerSwitch?>(null)
+    }
+    pendingAction?.let { action ->
+        AlertDialog(
+            onDismissRequest = { pendingAction = null },
+            title = { Text(stringResource(action.buttonLabel)) },
+            text = { Text(stringResource(R.string.settings_server_switch_warning)) },
+            dismissButton = {
+                TextButton(onClick = { pendingAction = null }) { Text(stringResource(R.string.settings_cancel)) }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingAction = null
+                    when (action) {
+                        ServerSwitch.Custom -> onApplyPreviewConfiguration()
+                        ServerSwitch.Official -> onResetToOfficialServer()
+                    }
+                }) { Text(stringResource(action.buttonLabel)) }
+            }
+        )
+    }
     SettingsScreenScaffold(
         title = stringResource(R.string.settings_server_title),
         onBack = onBack,
@@ -72,6 +105,7 @@ fun ServerSettingsRoute(
                 OutlinedTextField(
                     value = uiState.customOrigin,
                     onValueChange = onCustomOriginChange,
+                    enabled = !uiState.isApplying,
                     label = {
                         Text(stringResource(R.string.settings_server_custom_origin_label))
                     },
@@ -112,8 +146,8 @@ fun ServerSettingsRoute(
 
             item {
                 Button(
-                    onClick = onApplyPreviewConfiguration,
-                    enabled = uiState.previewApiBaseUrl != null && uiState.isApplying.not(),
+                    onClick = { pendingAction = ServerSwitch.Custom },
+                    enabled = uiState.canApply && !uiState.isApplying,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(stringResource(R.string.settings_server_apply_button))
@@ -122,8 +156,8 @@ fun ServerSettingsRoute(
 
             item {
                 OutlinedButton(
-                    onClick = onResetToOfficialServer,
-                    enabled = uiState.isApplying.not(),
+                    onClick = { pendingAction = ServerSwitch.Official },
+                    enabled = uiState.canReset && !uiState.isApplying,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(stringResource(R.string.settings_server_reset_button))

@@ -19,6 +19,7 @@ Prepare for exams, learn vocabulary, and memorize technical terms and facts. Cre
 
 - [User guides](https://nibomo.com/docs/)
 - [Developer docs](docs/README.md) — platform guides, architecture, scheduling, setup, and releases.
+- [Self-host with Docker and Portainer](docs/self-hosting.md) — private mobile guest sync on your server.
 - [MCP client setup](docs/mcp-connector.md)
 - [Support](https://nibomo.com/support/) · [Privacy](https://nibomo.com/privacy/)
 

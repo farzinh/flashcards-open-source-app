@@ -840,4 +840,5 @@
     <string name="ai_chat_instructions_count">%1$d / %2$d</string>
     <string name="ai_chat_instructions_load_failed">କଷ୍ଟମ୍ ନିର୍ଦ୍ଦେଶ ଲୋଡ୍ କରିହେଲା ନାହିଁ।</string>
     <string name="ai_chat_instructions_save_failed">କଷ୍ଟମ୍ ନିର୍ଦ୍ଦେଶ ସେଭ୍ କରିହେଲା ନାହିଁ। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।</string>
+    <string name="settings_server_switch_warning">ସର୍ଭର ବଦଳାଇଲେ ଏହି ଡିଭାଇସରୁ ସମସ୍ତ କାର୍ଯ୍ୟକ୍ଷେତ୍ର, କାର୍ଡ ଏବଂ ଅତିଥି ପରିଚୟପତ୍ର ହଟିଯିବ। ସିଙ୍କ୍ ହୋଇନଥିବା ପରିବର୍ତ୍ତନ ହଜିଯିବ।</string>
 </resources>
