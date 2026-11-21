@@ -8,9 +8,9 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 run_psql() {
   if [[ -n "${MIGRATION_DATABASE_URL:-}" ]]; then
-    psql "$MIGRATION_DATABASE_URL" "$@"
+    psql "$MIGRATION_DATABASE_URL" -v ON_ERROR_STOP=1 "$@"
   else
-    psql "$@"
+    psql -v ON_ERROR_STOP=1 "$@"
   fi
 }
 
@@ -44,14 +44,15 @@ for f in "$ROOT_DIR"/db/migrations/*.sql; do
   # be checked once at commit instead of per statement. Without this flag,
   # psql autocommits each statement individually and both patterns break on
   # a from-scratch migrate run.
-  run_psql --single-transaction -v ON_ERROR_STOP=1 -f "$f"
-  echo "INSERT INTO schema_migrations (filename) VALUES (:'fname')" | run_psql -v "fname=$BASENAME"
+  # Record completion in the same transaction so retrying after interruption is safe.
+  echo "INSERT INTO schema_migrations (filename) VALUES (:'fname')" |
+    run_psql --single-transaction -v "fname=$BASENAME" -f "$f" -f -
 done
 
 echo "Applying views..."
 for f in "$ROOT_DIR"/db/views/*.sql; do
   echo "  Applying $(basename "$f")"
-  run_psql -v ON_ERROR_STOP=1 -f "$f"
+  run_psql -f "$f"
 done
 
 if [[ -n "${BACKEND_DB_PASSWORD:-}" ]]; then

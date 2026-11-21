@@ -827,4 +827,5 @@
     <string name="ai_chat_instructions_count">%1$d / %2$d</string>
     <string name="ai_chat_instructions_load_failed">Tidak dapat memuatkan arahan tersuai.</string>
     <string name="ai_chat_instructions_save_failed">Tidak dapat menyimpan arahan tersuai. Cuba lagi.</string>
+    <string name="settings_server_switch_warning">Menukar pelayan akan memadamkan semua ruang kerja, kad dan kelayakan tetamu daripada peranti ini. Perubahan yang belum disegerakkan akan hilang.</string>
 </resources>

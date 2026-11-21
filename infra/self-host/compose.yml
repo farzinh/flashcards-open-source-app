@@ -1,0 +1,78 @@
+services:
+  postgres:
+    image: postgres:18.7
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: flashcards
+      POSTGRES_USER: flashcards_owner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    networks: [database]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "flashcards_owner", "-d", "flashcards"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  migrate:
+    image: ${NIBOMO_MIGRATE_IMAGE:-nibomo/migrate:self-host}
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGDATABASE: flashcards
+      PGUSER: flashcards_owner
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      BACKEND_DB_PASSWORD: ${BACKEND_DB_PASSWORD:?Set BACKEND_DB_PASSWORD}
+    networks: [database]
+
+  backend:
+    image: ${NIBOMO_BACKEND_IMAGE:-nibomo/backend:self-host}
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      AUTH_MODE: guest
+      DATABASE_URL: postgresql://backend_app@postgres:5432/flashcards
+      PGPASSWORD: ${BACKEND_DB_PASSWORD:?Set BACKEND_DB_PASSWORD}
+      PUBLIC_API_BASE_URL: https://api.${NIBOMO_DOMAIN:?Set NIBOMO_DOMAIN}/v1
+      PUBLIC_AUTH_BASE_URL: https://auth.${NIBOMO_DOMAIN:?Set NIBOMO_DOMAIN}
+      PUBLIC_APP_BASE_URL: https://${NIBOMO_DOMAIN:?Set NIBOMO_DOMAIN}
+    networks:
+      database:
+      ingress:
+        aliases: [nibomo-backend]
+    ports:
+      - target: 8080
+        published: "${NIBOMO_API_PORT:-8080}"
+        host_ip: "${NIBOMO_BIND_IP:-127.0.0.1}"
+      - target: 8081
+        published: "${NIBOMO_AUTH_PORT:-8081}"
+        host_ip: "${NIBOMO_BIND_IP:-127.0.0.1}"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          Promise.all([fetch('http://127.0.0.1:8080/v1/health'),
+          fetch('http://127.0.0.1:8081/health')])
+          .then(responses => { if (responses.some(response => !response.ok)) process.exitCode = 1 })
+          .catch(() => { process.exitCode = 1 })
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+networks:
+  database:
+    internal: true
+  ingress:
+
+volumes:
+  pgdata:

@@ -4,6 +4,8 @@ import com.flashcardsopensourceapp.data.local.cloud.CloudPreferencesStore
 import com.flashcardsopensourceapp.data.local.cloud.remote.CloudRemoteGateway
 import com.flashcardsopensourceapp.data.local.model.cloud.CloudServiceConfiguration
 import com.flashcardsopensourceapp.data.local.model.cloud.makeCustomCloudServiceConfiguration
+import com.flashcardsopensourceapp.data.local.model.cloud.makeOfficialCloudServiceConfiguration
+import com.flashcardsopensourceapp.data.local.model.cloud.targetsSameServer
 import com.flashcardsopensourceapp.data.local.repository.cloudsync.runtime.CloudOperationCoordinator
 
 internal class CloudServerConfigurationCoordinator(
@@ -26,6 +28,9 @@ internal class CloudServerConfigurationCoordinator(
 
     suspend fun applyCustomServer(configuration: CloudServiceConfiguration) {
         operationCoordinator.runExclusive {
+            if (currentServerConfiguration().targetsSameServer(configuration)) {
+                return@runExclusive
+            }
             preferencesStore.applyCustomServer(configuration)
             resetCoordinator.resetLocalStateForCloudIdentityChange()
         }
@@ -33,6 +38,9 @@ internal class CloudServerConfigurationCoordinator(
 
     suspend fun resetToOfficialServer() {
         operationCoordinator.runExclusive {
+            if (currentServerConfiguration().targetsSameServer(makeOfficialCloudServiceConfiguration())) {
+                return@runExclusive
+            }
             preferencesStore.resetToOfficialServer()
             resetCoordinator.resetLocalStateForCloudIdentityChange()
         }

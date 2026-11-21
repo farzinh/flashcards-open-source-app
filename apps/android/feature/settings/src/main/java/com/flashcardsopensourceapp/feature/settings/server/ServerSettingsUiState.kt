@@ -8,5 +8,7 @@ data class ServerSettingsUiState(
     val previewApiBaseUrl: String?,
     val previewAuthBaseUrl: String?,
     val isApplying: Boolean,
-    val errorMessage: String
+    val errorMessage: String,
+    val canApply: Boolean = false,
+    val canReset: Boolean = false
 )

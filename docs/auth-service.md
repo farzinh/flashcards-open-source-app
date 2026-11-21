@@ -7,7 +7,7 @@ Human-run acceptance: [browser](browser-sign-in-hints.md#manual-browser-acceptan
 [Android](../apps/android/docs/native-sign-in-acceptance.md). These procedures distinguish source
 and cloud checks from actual provider, signed-device, mailbox and lifecycle results.
 
-- `AUTH_MODE`: `none` (local dev, no auth) or `cognito` (verify JWT from `Authorization: Bearer`)
+- Backend `AUTH_MODE`: `cognito` for Cognito tokens and existing guest credentials, `guest` for [private self-hosted guest sessions](self-hosting.md), or `none` for local development.
 - Account identity: an account's `user_id` is a surrogate identifier the product owns, and
   `auth.user_identities` maps a Cognito subject to it. The two are not required to be equal, and the
   id is not derived from the subject; the column rule lives in

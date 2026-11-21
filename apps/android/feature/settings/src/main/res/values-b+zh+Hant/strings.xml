@@ -827,4 +827,5 @@
     <string name="ai_chat_instructions_count">%1$d / %2$d</string>
     <string name="ai_chat_instructions_load_failed">無法載入自訂指示。</string>
     <string name="ai_chat_instructions_save_failed">無法儲存自訂指示。請再試一次。</string>
+    <string name="settings_server_switch_warning">切換伺服器將清除此裝置上的所有工作區、卡片和訪客憑證。尚未同步的變更將會遺失。</string>
 </resources>

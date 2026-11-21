@@ -831,4 +831,5 @@
     <string name="ai_chat_instructions_count">%1$d / %2$d</string>
     <string name="ai_chat_instructions_load_failed">Não foi possível carregar as instruções personalizadas.</string>
     <string name="ai_chat_instructions_save_failed">Não foi possível guardar as instruções personalizadas. Tente novamente.</string>
+    <string name="settings_server_switch_warning">Mudar de servidor apaga todos os espaços de trabalho, cartões e credenciais de convidado deste dispositivo. As alterações por sincronizar serão perdidas.</string>
 </resources>

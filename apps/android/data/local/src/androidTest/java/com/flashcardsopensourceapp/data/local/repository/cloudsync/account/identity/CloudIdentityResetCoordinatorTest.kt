@@ -9,6 +9,7 @@ import com.flashcardsopensourceapp.data.local.model.cloud.CloudCredentialRecover
 import com.flashcardsopensourceapp.data.local.model.cloud.CloudCredentialRecoveryState
 import com.flashcardsopensourceapp.data.local.model.cloud.CloudServiceConfigurationMode
 import com.flashcardsopensourceapp.data.local.model.ai.effectiveAiChatServerConfig
+import com.flashcardsopensourceapp.data.local.model.cloud.makeCustomCloudServiceConfiguration
 import com.flashcardsopensourceapp.data.local.model.cloud.makeOfficialCloudServiceConfiguration
 import com.flashcardsopensourceapp.data.local.repository.cloudsync.support.CloudIdentityTestEnvironment
 import com.flashcardsopensourceapp.data.local.repository.cloudsync.support.FakeCloudRemoteGateway
@@ -36,6 +37,36 @@ class CloudIdentityResetCoordinatorTest {
     @After
     fun tearDown() {
         environment.close()
+    }
+
+    @Test
+    fun applyingLegacyOfficialAliasWithExplicitHttpsPortPreservesLocalIdentityAndCards() = runBlocking {
+        val workspaceId = environment.requireLocalWorkspaceId()
+        val cardId = environment.seedWorkspaceData(workspaceId)
+        val guest = createStoredGuestAiSession(
+            workspaceId = workspaceId,
+            configurationMode = CloudServiceConfigurationMode.OFFICIAL,
+            apiBaseUrl = makeOfficialCloudServiceConfiguration().apiBaseUrl,
+            guestToken = "guest-token",
+            userId = "guest-user"
+        )
+        environment.guestAiSessionStore.saveSession(localWorkspaceId = workspaceId, session = guest)
+        val repository = environment.createCloudAccountRepository(remoteGateway = FakeCloudRemoteGateway.standard())
+
+        repository.applyCustomServer(
+            makeCustomCloudServiceConfiguration(customOrigin = "https://flashcards-open-source-app.com:443")
+        )
+
+        assertEquals(makeOfficialCloudServiceConfiguration(), repository.currentServerConfiguration())
+        assertEquals(workspaceId, environment.requireLocalWorkspaceId())
+        assertEquals("Question", environment.database.cardDao().loadCard(cardId)?.frontText)
+        assertEquals(
+            guest,
+            environment.guestAiSessionStore.loadSession(
+                localWorkspaceId = workspaceId,
+                configuration = repository.currentServerConfiguration()
+            )
+        )
     }
 
     @Test

@@ -13,6 +13,8 @@ import com.flashcardsopensourceapp.data.local.cloud.remote.CloudRemoteException
 import com.flashcardsopensourceapp.data.local.model.cloud.CloudServiceConfiguration
 import com.flashcardsopensourceapp.data.local.model.cloud.CloudServiceConfigurationMode
 import com.flashcardsopensourceapp.data.local.model.cloud.makeCustomCloudServiceConfiguration
+import com.flashcardsopensourceapp.data.local.model.cloud.makeOfficialCloudServiceConfiguration
+import com.flashcardsopensourceapp.data.local.model.cloud.targetsSameServer
 import com.flashcardsopensourceapp.data.local.repository.CloudAccountRepository
 import com.flashcardsopensourceapp.feature.settings.R
 import com.flashcardsopensourceapp.feature.settings.SettingsStringResolver
@@ -61,6 +63,8 @@ class ServerSettingsViewModel(
             authBaseUrl = configuration.authBaseUrl,
             previewApiBaseUrl = draft.previewConfiguration?.apiBaseUrl,
             previewAuthBaseUrl = draft.previewConfiguration?.authBaseUrl,
+            canApply = draft.previewConfiguration?.let { !configuration.targetsSameServer(it) } == true,
+            canReset = !configuration.targetsSameServer(makeOfficialCloudServiceConfiguration()),
             isApplying = draft.isApplying,
             errorMessage = draft.errorMessage
         )
@@ -115,11 +119,15 @@ class ServerSettingsViewModel(
 
     suspend fun applyPreviewConfiguration() {
         val previewConfiguration = draftState.value.previewConfiguration
+        if (draftState.value.isApplying) return
         val customOrigin = previewConfiguration?.customOrigin
-        if (customOrigin == null) {
+        if (previewConfiguration == null || customOrigin == null) {
             draftState.update { state ->
                 state.copy(errorMessage = strings.get(R.string.settings_server_enter_valid_url))
             }
+            return
+        }
+        if (cloudAccountRepository.currentServerConfiguration().targetsSameServer(previewConfiguration)) {
             return
         }
         draftState.update { state -> state.copy(isApplying = true, errorMessage = "") }
@@ -256,6 +264,10 @@ class ServerSettingsViewModel(
     }
 
     suspend fun resetToOfficialServer() {
+        if (draftState.value.isApplying) return
+        if (cloudAccountRepository.currentServerConfiguration().targetsSameServer(makeOfficialCloudServiceConfiguration())) {
+            return
+        }
         draftState.update { state -> state.copy(isApplying = true, errorMessage = "") }
         try {
             cloudAccountRepository.resetToOfficialServer()
